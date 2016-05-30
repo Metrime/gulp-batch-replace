@@ -1,12 +1,14 @@
-var replacePlugin = require('../');
-var fs = require('fs');
-var path = require('path');
-var es = require('event-stream');
-var should = require('should');
-var gutil = require('gulp-util');
+"use strict";
+
+let replacePlugin = require('../');
+let fs = require('fs');
+let path = require('path');
+let es = require('event-stream');
+let should = require('should');
+let gutil = require('gulp-util');
 require('mocha');
 
-var replaceThisString = [
+let replaceThisString = [
   ['world','person'],
   ['old','weird'],
   ['new','funky'],
@@ -14,7 +16,7 @@ var replaceThisString = [
   ['cruel','amazing']
 ];
 
-var replaceThisRegexp = [
+let replaceThisRegexp = [
   [/world/g,'person'],
   [/old/g,'weird'],
   [/new/g,'funky'],
@@ -22,7 +24,15 @@ var replaceThisRegexp = [
   [/cruel/g,'amazing']
 ];
 
-var replaceThisMixed = [
+let replaceThisAltRegexp = [
+  [new RegExp('world', 'g'), 'person'],
+  [new RegExp('old', 'g'), 'weird'],
+  [new RegExp('new', 'g'), 'funky'],
+  [new RegExp('kind', 'g'), 'lovely'],
+  [new RegExp('cruel', 'g'), 'amazing']
+]
+
+let replaceThisMixed = [
   [/world/g,'person'],
   ['old','weird'],
   [/new/g,'funky'],
@@ -30,7 +40,7 @@ var replaceThisMixed = [
   [/cruel/g,'amazing']
 ];
 
-var makeFile = function(contents) {
+let makeFile = function(contents) {
   return new gutil.File({
     path: 'test/file.txt',
     cwd: 'test/',
@@ -42,21 +52,21 @@ var makeFile = function(contents) {
 describe('gulp-batch-replace', function() {
   describe('replacePlugin()', function() {
     it('should replace string with string on a stream', function(done) {
-      var file = new gutil.File({
+      let file = new gutil.File({
         path: 'test/fixtures/helloworld.txt',
         cwd: 'test/',
         base: 'test/fixtures',
         contents: fs.createReadStream('test/fixtures/helloworld.txt')
       });
 
-      var stream = replacePlugin(replaceThisString);
+      let stream = replacePlugin(replaceThisString);
       stream.on('data', function(newFile) {
         should.exist(newFile);
         should.exist(newFile.contents);
 
         newFile.contents.pipe(es.wait(function(err, data) {
           should.not.exist(err);
-          data.should.equal(fs.readFileSync('test/expected/helloworld.txt', 'utf8'));
+          String(data).should.equal(fs.readFileSync('test/expected/helloworld.txt', 'utf8'));
           done();
         }));
       });
@@ -66,21 +76,45 @@ describe('gulp-batch-replace', function() {
     });
 
     it('should replace regex with string on a stream', function(done) {
-      var file = new gutil.File({
+      let file = new gutil.File({
         path: 'test/fixtures/helloworld.txt',
         cwd: 'test/',
         base: 'test/fixtures',
         contents: fs.createReadStream('test/fixtures/helloworld.txt')
       });
 
-      var stream = replacePlugin(replaceThisRegexp);
+      let stream = replacePlugin(replaceThisRegexp);
       stream.on('data', function(newFile) {
         should.exist(newFile);
         should.exist(newFile.contents);
 
         newFile.contents.pipe(es.wait(function(err, data) {
           should.not.exist(err);
-          data.should.equal(fs.readFileSync('test/expected/helloworld.txt', 'utf8'));
+          String(data).should.equal(fs.readFileSync('test/expected/helloworld.txt', 'utf8'));
+          done();
+        }));
+      });
+
+      stream.write(file);
+      stream.end();
+    });
+
+    it('should replace alt-regex with string on a stream', function(done) {
+      let file = new gutil.File({
+        path: 'test/fixtures/helloworld.txt',
+        cwd: 'test/',
+        base: 'test/fixtures',
+        contents: fs.createReadStream('test/fixtures/helloworld.txt')
+      });
+
+      let stream = replacePlugin(replaceThisAltRegexp);
+      stream.on('data', function(newFile) {
+        should.exist(newFile);
+        should.exist(newFile.contents);
+
+        newFile.contents.pipe(es.wait(function(err, data) {
+          should.not.exist(err);
+          String(data).should.equal(fs.readFileSync('test/expected/helloworld.txt', 'utf8'));
           done();
         }));
       });
@@ -90,14 +124,14 @@ describe('gulp-batch-replace', function() {
     });
 
     it('should replace string with string on a buffer', function(done) {
-      var file = new gutil.File({
+      let file = new gutil.File({
         path: 'test/fixtures/helloworld.txt',
         cwd: 'test/',
         base: 'test/fixtures',
         contents: fs.readFileSync('test/fixtures/helloworld.txt')
       });
 
-      var stream = replacePlugin(replaceThisString);
+      let stream = replacePlugin(replaceThisString);
       stream.on('data', function(newFile) {
         should.exist(newFile);
         should.exist(newFile.contents);
@@ -111,14 +145,14 @@ describe('gulp-batch-replace', function() {
     });
 
     it('should replace regex with string on a buffer', function(done) {
-      var file = new gutil.File({
+      let file = new gutil.File({
         path: 'test/fixtures/helloworld.txt',
         cwd: 'test/',
         base: 'test/fixtures',
         contents: fs.readFileSync('test/fixtures/helloworld.txt')
       });
 
-      var stream = replacePlugin(replaceThisRegexp);
+      let stream = replacePlugin(replaceThisRegexp);
       stream.on('data', function(newFile) {
         should.exist(newFile);
         should.exist(newFile.contents);
@@ -132,17 +166,19 @@ describe('gulp-batch-replace', function() {
     });
 
     it('should replace mixed search types on a buffer', function(done) {
-      var file = new gutil.File({
+      let file = new gutil.File({
         path: 'test/fixtures/helloworld.txt',
         cwd: 'test/',
         base: 'test/fixtures',
         contents: fs.readFileSync('test/fixtures/helloworld.txt')
       });
 
-      var stream = replacePlugin(replaceThisMixed);
+      let stream = replacePlugin(replaceThisMixed);
       stream.on('data', function(newFile) {
         should.exist(newFile);
         should.exist(newFile.contents);
+
+        console.log(String(newFile.contents));
 
         String(newFile.contents).should.equal(fs.readFileSync('test/expected/helloworld.txt', 'utf8'));
         done();
@@ -153,21 +189,21 @@ describe('gulp-batch-replace', function() {
     });
 
     it('should replace mixed search types on a stream', function(done) {
-      var file = new gutil.File({
+      let file = new gutil.File({
         path: 'test/fixtures/helloworld.txt',
         cwd: 'test/',
         base: 'test/fixtures',
         contents: fs.createReadStream('test/fixtures/helloworld.txt')
       });
 
-      var stream = replacePlugin(replaceThisMixed);
+      let stream = replacePlugin(replaceThisMixed);
       stream.on('data', function(newFile) {
         should.exist(newFile);
         should.exist(newFile.contents);
 
         newFile.contents.pipe(es.wait(function(err, data) {
           should.not.exist(err);
-          data.should.equal(fs.readFileSync('test/expected/helloworld.txt', 'utf8'));
+          String(data).should.equal(fs.readFileSync('test/expected/helloworld.txt', 'utf8'));
           done();
         }));
       });
