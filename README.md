@@ -14,7 +14,7 @@
 		[ 'original2', 'replacement2' ]
 	];
 	
-	var replace = require('gulp-batch-replace);
+	var replace = require('gulp-batch-replace');
 	
 	gulp.task('example', function(){
 		gulp.src('foo.txt')
