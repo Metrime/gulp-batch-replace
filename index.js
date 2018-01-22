@@ -1,11 +1,13 @@
 var es = require('event-stream');
 
 module.exports = function(arr) {
+
   var doReplace = function(file, callback) {
 
 
     var isStream = file.contents && typeof file.contents.on === 'function' && typeof file.contents.pipe === 'function';
     var isBuffer = file.contents instanceof Buffer;
+    var fileName = (process.env.WINDIR) ? file.path.split('\\')[file.path.split('\\').length - 1] : file.path.split('/')[file.path.split('/').length - 1];
 
 
     if (isStream)
@@ -15,13 +17,20 @@ module.exports = function(arr) {
           var search  = arr[i][0],
               replace = arr[i][1];
 
-          var isRegExp = search instanceof RegExp;
+          var content = String( chunk );
+          var search = search instanceof RegExp ? search : new RegExp(search, 'g');
 
-          var result = isRegExp
-          ? String( chunk ).replace( search, replace )
-          : String( chunk ).split( search ).join( replace );
+          if (search.test(content)) {
+            result = content.replace( search, function() {
+              console.log('Replaced: ' + search.source + ' to: ' + replace + ' (' + fileName + ')');
+              return replace;
+            })
+          } else {
+            console.log('Failed: ' + search.source + ' to: ' + replace + ' in (' + fileName + ')');
+          }
+
           chunk = new Buffer(result);
-        };
+        }
         cb(null,chunk);
       }));
     }
@@ -33,9 +42,19 @@ module.exports = function(arr) {
         var search  = arr[i][0],
             replace = arr[i][1];
 
-        file.contents = search instanceof RegExp
-        ? new Buffer( String( file.contents ).replace( search, replace ) )
-        : new Buffer( String( file.contents ).split( search ).join( replace ) );
+        var content = String( file.contents );
+        var search = search instanceof RegExp ? search : new RegExp(search, 'g');
+
+        if (search.test(content)) {
+            content = content.replace( search, function() {
+                console.log('Replaced: ' + search.source + ' to: ' + replace + ' (' + fileName + ')');
+                return replace;
+            })
+        } else {
+            console.log('Failed: ' + search.source + ' to: ' + replace + ' in (' + fileName + ')');
+        }
+
+        file.contents = new Buffer(content);
       }
     }
 
