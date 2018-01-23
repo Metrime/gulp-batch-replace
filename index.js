@@ -7,7 +7,7 @@ module.exports = function(arr) {
 
     var isStream = file.contents && typeof file.contents.on === 'function' && typeof file.contents.pipe === 'function';
     var isBuffer = file.contents instanceof Buffer;
-    var fileName = (process.env.WINDIR) ? file.path.split('\\')[file.path.split('\\').length - 1] : file.path.split('/')[file.path.split('/').length - 1];
+    var fileName = (/^win/.test(process.platform)) ? file.path.split('\\')[file.path.split('\\').length - 1] : file.path.split('/')[file.path.split('/').length - 1];
 
 
     if (isStream)
@@ -18,7 +18,7 @@ module.exports = function(arr) {
               replace = arr[i][1];
 
           var content = String( chunk );
-          var search = search instanceof RegExp ? search : new RegExp(search, 'g');
+          var search = search instanceof RegExp ? search : new RegExp(search.replace(/\\/g,'\\\\'), 'g');
 
           if (search.test(content)) {
             result = content.replace( search, function() {
@@ -43,7 +43,7 @@ module.exports = function(arr) {
             replace = arr[i][1];
 
         var content = String( file.contents );
-        var search = search instanceof RegExp ? search : new RegExp(search, 'g');
+        var search = search instanceof RegExp ? search : new RegExp(search.replace(/\\/g,'\\\\'), 'g');
 
         if (search.test(content)) {
             content = content.replace( search, function() {
